@@ -16,8 +16,15 @@ npm start
 
 That should result in something like this.
 
-![](./doc/Screenshot 2020-07-07 at 12.22.27.png)
+![](./doc/img1.png)
 
-Now open a simulator on your Mac
+Now open a simulator on your Mac.
 
-![](./doc/Screenshot 2020-07-07 at 12.23.32.png)
+![](./doc/img2.png)
+
+Wait until the iOS simulator is finished booting. Then, press `i` in the
+terminal window where you ran `npm start`.
+
+![](./doc/img3.png)
+
+🎉 Congratulations! You just built the project succesfully.
