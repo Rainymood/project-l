@@ -27,4 +27,8 @@ terminal window where you ran `npm start`.
 
 ![](./doc/img3.png)
 
-🎉 Congratulations! You just built the project succesfully.
+🎉  Congratulations! You just built the project succesfully.
+
+## Credentials
+
+Go [here](https://console.developers.google.com/flows/enableapi?apiid=calendar) and register your API.
