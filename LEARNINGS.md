@@ -75,3 +75,184 @@ I went here https://developers.google.com/calendar/quickstart/js
 And clicked on these two buttons which gave me my credentials ... 
 
 ![](./doc/img8.png)
+
+## You need a `apiGoogleconfig.json` 
+
+OK That is fine. You need to have this file in your directory with the credentials. 
+
+Make sure you have a file `apiGoogleconfig.json` with this structure
+
+```json
+{
+    "clientId": "<CLIENT_ID>",
+    "apiKey": "<API_KEY>",
+    "scope": "https://www.googleapis.com/auth/calendar",
+    "discoveryDocs": ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"]
+}
+```
+
+# In classes you don't need the `function` keyword
+
+```js
+
+import React, {ReactNode, SyntheticEvent} from 'react';
+import ApiCalendar from 'react-google-calendar-api';
+
+export default class DoubleButton extends React.Component {
+
+    ...
+
+    // wrong
+    function handleItemClick(event, name) { 
+        ...
+      }
+
+    // right
+    handleItemClick(event, name) {
+        ...
+      }
+    }
+```
+
+
+# "JSX expressions must have one parent element.ts(2657)" ?
+
+JSX expressions must have one parent element.ts(2657)
+
+What this means is that your `return` function must return ONE thing and not two like here
+
+```js
+return () {
+    <button onClick={(e) => this.handleItemClick(e, 'sign-in')} > sign-in </button>
+    <button onClick={(e) => this.handleItemClick(e, 'sign-out')} > sign-out </button>
+}
+```
+
+Wrap it in a `<View>`? 
+
+
+# Instance.render is not a function 
+
+Nailed it. You called the function `return` not `render` nice. 
+
+```js
+return() { 
+    <View>
+        <button onClick={(e) => this.handleItemClick(e, 'sign-in')}> sign-in </button>
+        <button onClick={(e) => this.handleItemClick(e, 'sign-out')}> sign-out </button>
+    </View>;
+}
+```
+
+# Error: this.gapi not defined
+
+So basically `this.gapi` is not defined. It is initialised as `null` but doesn't get defined. 
+
+```js
+ApiCalendar {
+  "calendar": "primary",
+  "createEvent": [Function bound createEvent],
+  "createEventFromNow": [Function bound createEventFromNow],
+  "gapi": undefined,
+  "handleAuthClick": [Function bound handleAuthClick],
+  "handleSignoutClick": [Function bound handleSignoutClick],
+  "initClient": [Function bound initClient],
+  "listUpcomingEvents": [Function bound listUpcomingEvents],
+  "listenSign": [Function bound listenSign],
+  "onLoad": [Function bound onLoad],
+  "onLoadCallback": [Function anonymous],
+  "setCalendar": [Function bound setCalendar],
+  "sign": false,
+  "updateSigninStatus": [Function bound updateSigninStatus],
+}
+```
+
+Logging `ApiCalendar` gives the following thing. 
+
+I found this quote "You should change your onload call to addEventListener('load', callback);" here 
+https://stackoverflow.com/questions/51977448/how-to-use-gapi-in-react
+
+And looking in the source code we find this
+
+```js
+    handleClientLoad() {
+        this.gapi = window['gapi'];
+        const script = document.createElement("script");
+        script.src = "https://apis.google.com/js/api.js";
+        document.body.appendChild(script);
+        script.onload = () => { // ONLOAD! 
+            window['gapi'].load('client:auth2', this.initClient);
+        };
+    }
+```
+
+Note that the current package that I'm using is `react-google-calendar-api` and **not** `react-native-google-calendar-api`
+
+This is the same function but in a native port
+
+```js
+
+  /**
+   * Init Google Api
+   * And create gapi in global
+   */
+  handleClientLoad() {
+    const script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    document.body.appendChild(script);
+    script.onload = () => {
+      window.gapi.load('client:auth2', this.initClient);
+    };
+  }
+```
+
+So it indeed is a bit different. 
+
+## initClient() in react-native port
+
+```js
+ /**
+   * Auth to the google Api.
+   */
+  initClient() {
+    this.gapi = window['gapi'];
+    this.gapi.client.init(Config).then(() => {
+      // Listen for sign-in state changes.
+      this.gapi.auth2
+        .getAuthInstance()
+        .isSignedIn.listen(this.updateSigninStatus);
+      // Handle the initial sign-in state.
+      this.updateSigninStatus(
+        this.gapi.auth2.getAuthInstance().isSignedIn.get(),
+      );
+      if (this.onLoadCallback) {
+        this.onLoadCallback();
+      }
+    });
+  }
+```
+
+## initClient() in react port
+
+```js
+    /**
+     * Auth to the google Api.
+     */
+    initClient() {
+        this.gapi = window['gapi'];
+        this.gapi.client.init(Config)
+            .then(() => {
+            // Listen for sign-in state changes.
+            this.gapi.auth2.getAuthInstance().isSignedIn.listen(this.updateSigninStatus);
+            // Handle the initial sign-in state.
+            this.updateSigninStatus(this.gapi.auth2.getAuthInstance().isSignedIn.get());
+            if (this.onLoadCallback) {
+                this.onLoadCallback();
+            }
+        })
+            .catch((e) => {
+            console.log(e);
+        });
+    }
+```
+
