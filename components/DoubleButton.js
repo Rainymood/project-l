@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
-import ApiCalendar from 'react-google-calendar-api';
+import ApiCalendar from 'react-native-google-calendar-api';
 
 export default class DoubleButton extends React.Component {
     constructor(props) {
